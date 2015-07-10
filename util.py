@@ -20,6 +20,7 @@
 """
 
 import math
+import re
 
 class QgsVector(object):
   """2D vector class with (almost) the same signature as the QGIS one."""
@@ -142,3 +143,57 @@ class Angle():
             
         s += b
         return s
+
+
+class MgrsTool():
+  ct = mgrs.MGRS()
+  epsg4326 = QgsCoordinateReferenceSystem("EPSG:4326")
+  re_mgrs = re_compile('([0-9]{1,2})([A-Z]+)([0-9]*)')
+        
+  def toMgrs(self, pt):        
+#        canvas = iface.mapCanvas()
+        canvas = qgis.utils.iface.mapCanvas()
+
+#        canvasCrs = canvas.mapRenderer().destinationCrs()
+
+        try:
+             canvasCrs = canvas.mapSettings().destinationCrs()
+        except:
+             canvasCrs = canvas.mapRenderer().destinationCrs()
+
+        transform = QgsCoordinateTransform(canvasCrs, self.epsg4326)
+        pt4326 = transform.transform(pt.x(), pt.y())      
+
+        try:
+            mgrsCoords = self.ct.toMGRS(pt4326.y(), pt4326.x())
+        except:
+            mgrsCoords = None
+
+        return mgrsCoords
+
+# MGRS 54SVG999574 / zone:'54', letters:'SVG', easting: '999', northing: '574'
+# The function Break_MGRS_String breaks down an MGRS   
+# coordinate string into its component parts. 
+#   MGRS           : MGRS coordinate string          (input) 
+#   Zone           : UTM Zone                        (output) 
+#   Letters        : MGRS coordinate string letters  (output) 
+#   Easting        : Easting value                   (output) 
+#   Northing       : Northing value                  (output) 
+#   Precision      : Precision level of MGRS string  (output) 
+
+    def parseMGRS(self, mgrs):
+        m = re_mgrs.match(mgrs)
+        zone = m.group(0)
+        letters = m.group(1)
+        nums = m.group(2)
+        precision = len(nums) / 2
+        if precision>0:
+            Easting = nums[0:precision]
+            Northing = nums[precision+1,precision*2]
+        else:
+            Easting = ''
+            Northing = ''
+            
+        return ( zone, letters, easting, nothing, precision )
+
+
