@@ -31,6 +31,7 @@ from gridpropertiesdialog import GridPropertiesDialog
 
 class GridPluginLayer(core.QgsPluginLayer):
     LAYER_TYPE = 'grid'
+    m = MgrsTool()
 
     _featuremap = {
         0: core.QgsField('cell_num', QtCore.QVariant.Int, 'integer', 8),
@@ -255,6 +256,37 @@ class GridPluginLayer(core.QgsPluginLayer):
                     feat.setGeometry(core.QgsGeometry().fromPoint(pp))
                 
                     self.label_features.append(feat)
+
+        # MGRS
+        elif self.label_type == 3:
+            # Grid reference - MGRS.
+            # Cell coordinates.
+            for cell in xrange(0, len(self.grid[0]) - 1):
+                feat = core.QgsFeature()
+                feat.addAttribute(0, cell)
+                self._setHorizontalLabelAttributes(feat, math.degrees(baseVec.angle()))
+                
+                # Labels representing CRS coordinates are placed in the centre of the grid line.
+                p = core.QgsPoint(self.grid[0][cell].x(), self.grid[0][cell].y() + halfBaseVec.y)
+                feat.setGeometry(core.QgsGeometry().fromPoint(p))
+            
+                p0 = core.QgsPoint(self.grid[0][cell].x(), self.grid[0][cell].y())
+                mgrs = m.toMgrs(p0)
+                ( zone, letters, easting, nothing, precision )  = m.parseMGRS(mgrs)
+                labeltext = easting
+                feat.addAttribute(2, labeltext)
+                self.label_features.append(feat)
+            
+            for cell in xrange(0, len(self.grid[self.numCellsY + 1]) - 1):
+                feat = core.QgsFeature()
+                feat.addAttribute(0, cell)
+                self._setVerticalLabelAttributes(feat, math.degrees(baseVec.angle()))
+                
+                p = core.QgsPoint(self.grid[self.numCellsY + 1][cell].x() + halfPerpVec.x, self.grid[self.numCellsY + 1][cell].y())
+                feat.setGeometry(core.QgsGeometry().fromPoint(p))
+                
+                feat.addAttribute(2, labeltext)
+                self.label_features.append(feat)
 
     def _setHorizontalLabelAttributes(self, feature, angle):
         if self.label_orientation == 0 or self.label_orientation == 3:
