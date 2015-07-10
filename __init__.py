@@ -21,6 +21,11 @@
 
 # This script initializes the plugin, making it known to QGIS.
 
+import os
+import site
+
+site.addsitedir(os.path.abspath(os.path.dirname(__file__) + '/ext-libs'))
+
 version_major = 0
 version_minor = 1
 version_revision = 1
@@ -38,5 +43,6 @@ def qgisMinimumVersion():
 def category():
     return "Layers"
 def classFactory(iface):
+    from mgrstools import MGRSTools
     from gridoverlay import GridOverlay
     return GridOverlay(iface)
