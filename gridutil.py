@@ -20,7 +20,6 @@
 """
 
 import math
-import re
 
 class QgsVector(object):
   """2D vector class with (almost) the same signature as the QGIS one."""
@@ -70,7 +69,7 @@ class QgsVector(object):
 
 class Angle():
     cardinals = ('N', 'E', 'S', 'W')
-    
+
     def __init__(self, degrees):
         round(degrees, 6)
         self.sign = '-' if degrees < 0.0 else ''
@@ -79,7 +78,7 @@ class Angle():
         self.degrees, self.fracDegrees = divmod(decimal_degrees, 1.0)
         self.minutes, self.fracMinutes = divmod(self.fracDegrees * 60.0, 1.0)
         self.seconds, self.fracSeconds = divmod(self.fracMinutes * 60.0, 1.0)
-        
+
     def __format__(self, format_spec):
         s = ''
         b, m, e = format_spec.partition('%')
@@ -88,21 +87,21 @@ class Angle():
             pad = False
             precision = 0
             s += b
-            
+
             precPos = 0
             while e[precPos].isdigit():
                 precPos += 1
-                
+
             precString = e[:precPos]
-        
+
             if precString != '':
                 if precString[0] == '0':
                     pad = True
-            
+
                 precision = int(precString)
 
             spec = e[precPos]
-            
+
             if spec == 'g':
                 s += self.sign
             elif spec == 'D':
@@ -138,19 +137,22 @@ class Angle():
                     s += Angle.cardinals[3]
             else:
                 raise ValueError("Invalid format specifier '%c'" % spec)
-                
+
             b, m, e = e[precPos + 1:].partition('%')
-            
+
         s += b
         return s
 
+from qgis import core
+from mgrs import MGRS
+import re
 
 class MgrsTool():
-  ct = mgrs.MGRS()
-  epsg4326 = QgsCoordinateReferenceSystem("EPSG:4326")
-  re_mgrs = re_compile('([0-9]{1,2})([A-Z]+)([0-9]*)')
-        
-  def toMgrs(self, pt):        
+  ct = MGRS()
+  epsg4326 = core.QgsCoordinateReferenceSystem("EPSG:4326")
+  re_mgrs = re.compile('([0-9]{1,2})([A-Z]+)([0-9]*)')
+
+  def toMgrs(self, pt):
 #        canvas = iface.mapCanvas()
         canvas = qgis.utils.iface.mapCanvas()
 
@@ -162,7 +164,7 @@ class MgrsTool():
              canvasCrs = canvas.mapRenderer().destinationCrs()
 
         transform = QgsCoordinateTransform(canvasCrs, self.epsg4326)
-        pt4326 = transform.transform(pt.x(), pt.y())      
+        pt4326 = transform.transform(pt.x(), pt.y())
 
         try:
             mgrsCoords = self.ct.toMGRS(pt4326.y(), pt4326.x())
@@ -172,16 +174,16 @@ class MgrsTool():
         return mgrsCoords
 
 # MGRS 54SVG999574 / zone:'54', letters:'SVG', easting: '999', northing: '574'
-# The function Break_MGRS_String breaks down an MGRS   
-# coordinate string into its component parts. 
-#   MGRS           : MGRS coordinate string          (input) 
-#   Zone           : UTM Zone                        (output) 
-#   Letters        : MGRS coordinate string letters  (output) 
-#   Easting        : Easting value                   (output) 
-#   Northing       : Northing value                  (output) 
-#   Precision      : Precision level of MGRS string  (output) 
+# The function Break_MGRS_String breaks down an MGRS
+# coordinate string into its component parts.
+#   MGRS           : MGRS coordinate string          (input)
+#   Zone           : UTM Zone                        (output)
+#   Letters        : MGRS coordinate string letters  (output)
+#   Easting        : Easting value                   (output)
+#   Northing       : Northing value                  (output)
+#   Precision      : Precision level of MGRS string  (output)
 
-    def parseMGRS(self, mgrs):
+  def parseMGRS(self, mgrs):
         m = re_mgrs.match(mgrs)
         zone = m.group(0)
         letters = m.group(1)
@@ -193,7 +195,5 @@ class MgrsTool():
         else:
             Easting = ''
             Northing = ''
-            
+
         return ( zone, letters, easting, nothing, precision )
-
-
