@@ -31,15 +31,15 @@ version_minor = 1
 version_revision = 1
 
 def name():
-    return "Grid Overlay"
+    return "Grid Overlay with MRGS"
 def description():
-    return "Overlays a user-definable grid on the map."
+    return "Overlays a user-definable grid on the map, supports MRGS."
 def version():
     return "Version %d.%d.%d" % (version_major, version_minor, version_revision)
 def icon():
     return "icon.png"
 def qgisMinimumVersion():
-    return "1.7"
+    return "2.0"
 def category():
     return "Layers"
 def classFactory(iface):

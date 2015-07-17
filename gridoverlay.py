@@ -39,21 +39,21 @@ class GridOverlay:
 
     def initGui(self):
         '''
-        Sets this up as a Quantum GIS plug-in.
+        Sets this up as a QGIS plug-in.
         '''
         # Create action_newGrid that will start plugin configuration
         self.action_newGrid = QtGui.QAction(
                         QtGui.QIcon(":/icons/icon.png"),
                         "Add Grid Overlay...", self.iface.mainWindow())
-        
+
         # Add toolbar button and menu item
         self.iface.addToolBarIcon(self.action_newGrid)
         self.iface.insertAddLayerAction(self.action_newGrid)
 
         self.action_newGrid.triggered.connect(self.run)
-        
+
         core.QgsPluginLayerRegistry.instance().addPluginLayerType(GridPluginLayerType())
-        
+
     def unload(self):
         '''
         Removes the plug-in menu item and icon.
@@ -65,6 +65,6 @@ class GridOverlay:
     def run(self):
         layer = GridPluginLayer()
         layer.showDialog()
-        
+
         if layer.isValid():
             core.QgsMapLayerRegistry.instance().addMapLayer(layer)
