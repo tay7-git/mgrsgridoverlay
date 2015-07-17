@@ -3,6 +3,7 @@
 PLUGINNAME = gridoverlay
 
 PY_FILES = gridoverlay.py gridpluginlayer.py gridpluginlayertype.py gridpropertiesdialog.py __init__.py
+PY_FILES = gridoverlay.py gridpluginlayer.py gridpluginlayertype.py gridpropertiesdialog.py gridutil.py __init__.py
 
 EXTRAS = CHANGELOG Makefile metadata.txt icon.png LICENSE TODO
 
