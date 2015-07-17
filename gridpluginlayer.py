@@ -24,7 +24,7 @@ import math
 from PyQt4 import QtCore, QtGui, QtXml
 from qgis import core
 from qgis.core import QGis
-from util import *
+from gridutil import *
 
 from gridpropertiesdialog import GridPropertiesDialog
 
