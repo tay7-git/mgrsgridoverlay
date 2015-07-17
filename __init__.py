@@ -38,11 +38,8 @@ def version():
     return "Version %d.%d.%d" % (version_major, version_minor, version_revision)
 def icon():
     return "icon.png"
-def qgisMinimumVersion():
-    return "2.0"
 def category():
     return "Layers"
 def classFactory(iface):
-    from mgrstools import MGRSTools
     from gridoverlay import GridOverlay
     return GridOverlay(iface)
