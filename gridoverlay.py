@@ -25,7 +25,6 @@ from qgis import core
 from gridpropertiesdialog import GridPropertiesDialog
 from gridpluginlayertype import GridPluginLayerType
 from gridpluginlayer import GridPluginLayer
-import resources
 
 class GridOverlay:
     '''
