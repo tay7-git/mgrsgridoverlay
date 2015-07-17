@@ -2,7 +2,6 @@
 # supports QGIS >2.0
 PLUGINNAME = gridoverlay
 
-PY_FILES = gridoverlay.py gridpluginlayer.py gridpluginlayertype.py gridpropertiesdialog.py __init__.py
 PY_FILES = gridoverlay.py gridpluginlayer.py gridpluginlayertype.py gridpropertiesdialog.py gridutil.py __init__.py
 
 EXTRAS = CHANGELOG Makefile metadata.txt icon.png LICENSE TODO
@@ -10,6 +9,10 @@ EXTRAS = CHANGELOG Makefile metadata.txt icon.png LICENSE TODO
 UI_FILES = ui_grid_properties.py
 
 RESOURCE_FILES = resources_rc.py
+
+EXTLIBS = ext-libs
+
+DEPLOY = $(HOME)/.qgis2/python/plugins/$(PLUGINNAME)
 
 #get plugin version for use in 'make package'
 ifeq ($(strip $(GIT_VERSION)),)
@@ -37,11 +40,13 @@ resources_rc.py : resources.qrc
 # the Python plugin directory is located at:
 # $HOME/.qgis/python/plugins
 deploy: compile
-	mkdir -p $(HOME)/.qgis2/python/plugins/$(PLUGINNAME)
-	cp -vf $(PY_FILES) $(HOME)/.qgis2/python/plugins/$(PLUGINNAME)
-	cp -vf $(UI_FILES) $(HOME)/.qgis2/python/plugins/$(PLUGINNAME)
-	cp -vf $(RESOURCE_FILES) $(HOME)/.qgis2/python/plugins/$(PLUGINNAME)
-	cp -vf $(EXTRAS) $(HOME)/.qgis2/python/plugins/$(PLUGINNAME)
+	mkdir -p $(DEPLOY)
+	cp -vf $(PY_FILES) $(DEPLOY)
+	cp -vf $(UI_FILES) $(DEPLOY)
+	cp -vf $(RESOURCE_FILES) $(DEPLOY)
+	cp -vf $(EXTRAS) $(DEPLOY)
+	mkdir -p $(DEPLOY)/$(EXTLIBS)
+	cp -vfr $(EXTLIBS)/ $(DEPLOY)/$(EXTLIBS)/
 
 # Create a zip package of the plugin named $(PLUGINNAME).zip.
 # This requires use of git (your plugin development directory must be a

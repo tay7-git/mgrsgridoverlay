@@ -33,15 +33,6 @@ class GridPluginLayer(core.QgsPluginLayer):
     LAYER_TYPE = 'grid'
     m = MgrsTool()
 
-    _featuremap = {
-        0: core.QgsField('cell_num', QtCore.QVariant.Int, 'integer', 8),
-        1: core.QgsField('angle', QtCore.QVariant.Double, 'double', 8, 4),
-        2: core.QgsField('ordinate', QtCore.QVariant.String, 'string', 32),
-        3: core.QgsField('alignment', QtCore.QVariant.String, 'string', 8),
-        4: core.QgsField('offset_x', QtCore.QVariant.Double, 'double', 8, 4),
-        5: core.QgsField('offset_y', QtCore.QVariant.Double, 'double', 8, 4)
-       }
-
     def __init__(self):
         core.QgsPluginLayer.__init__(self, GridPluginLayer.LAYER_TYPE,
                                      'Grid overlay')
@@ -59,7 +50,8 @@ class GridPluginLayer(core.QgsPluginLayer):
         self.cellSizeY = 10.0
         self.baselineAngle = 0.0
         self.grid = []
-        self.label = core.QgsLabel(GridPluginLayer._featuremap)
+        self.fields = core.QgsFields()
+        self.label = core.QgsLabel(self.fields)
         self.label_features = []
         self.draw_labels = False
         self.label_type = 0
@@ -73,6 +65,14 @@ class GridPluginLayer(core.QgsPluginLayer):
         self.label_xoff_vertical = 0.0
         self.label_yoff_horizontal = 0.0
         self.label_yoff_vertical = 0.0
+
+        self.fields.append(core.QgsField('cell_num', QtCore.QVariant.Int, 'integer', 8))
+        self.fields.append(core.QgsField('angle', QtCore.QVariant.Double, 'double', 8, 4))
+        self.fields.append(core.QgsField('ordinate', QtCore.QVariant.String, 'string', 32))
+        self.fields.append(core.QgsField('alignment', QtCore.QVariant.String, 'string', 8))
+        self.fields.append(core.QgsField('offset_x', QtCore.QVariant.Double, 'double', 8, 4))
+        self.fields.append(core.QgsField('offset_y', QtCore.QVariant.Double, 'double', 8, 4))
+        self.label.setFields(self.fields)
 
         proj = core.QgsProject.instance()
         # Default CRS: 3452 == EPSG:4326
@@ -141,7 +141,7 @@ class GridPluginLayer(core.QgsPluginLayer):
             self.grid.append(line)
 
         self.generateLabels()
-        
+
         lower_left = (baseVec * self.gridOffsetX) + (perpVec * self.gridOffsetY)
         lower_right = lower_left + (baseVec * self.numCellsX)
         upper_left = lower_left + (perpVec * self.numCellsY)
@@ -153,7 +153,7 @@ class GridPluginLayer(core.QgsPluginLayer):
         maxy = max(lower_left.y, max(lower_right.y, max(upper_left.y, upper_right.y)))
 
         self.setExtent(core.QgsRectangle(minx + self.origin.x(), miny + self.origin.y(), maxx + self.origin.x(), maxy + self.origin.y()))
-        
+
     def generateLabels(self):
         self.label_features = []
         baseVec = QgsVector(1.0, 0.0).rotateBy(math.radians(360.0 - self.baselineAngle)) * self.cellSizeX
@@ -164,97 +164,97 @@ class GridPluginLayer(core.QgsPluginLayer):
         # CRS coordinates.
         if self.label_type == 0:
             for cell in xrange(0, len(self.grid[0])):
-                feat = core.QgsFeature()
-                feat.addAttribute(0, cell)
+                feat = core.QgsFeature(self.fields)
+                feat['cell_num'] = cell
                 self._setHorizontalLabelAttributes(feat, math.degrees(baseVec.angle()))
 
                 labelvalue = self.grid[0][cell].x()
                 if self.crs().geographicFlag():
                     showDegrees = True
-                    
+
                     if self.label_degrees_diff and cell > 0 and cell < len(self.grid[0]) - 1:
                         if labelvalue < 0.0:
                             lastLabelValue = self.grid[0][cell + 1].x()
                         else:
                             lastLabelValue = self.grid[0][cell - 1].x()
-                        
+
                         if (abs(lastLabelValue) // 1 == abs(labelvalue) // 1) and ((lastLabelValue < 0.0) == (labelvalue < 0.0)):
                             showDegrees = False
-                    
+
                     labeltext = self.formatLabel(labelvalue, '%e', showDegrees)
                 else:
                     labeltext = '{0:0.{precision}f}'.format(labelvalue, precision=self.label_precision)
-                    
-                feat.addAttribute(2, labeltext)
+
+                feat['ordinate'] = labeltext
                 feat.setGeometry(core.QgsGeometry().fromPoint(self.grid[0][cell]))
                 self.label_features.append(feat)
-            
+
             for cell in xrange(0, len(self.grid[self.numCellsY + 1])):
-                feat = core.QgsFeature()
-                feat.addAttribute(0, cell)
+                feat = core.QgsFeature(self.fields)
+                feat['cell_num'] = cell
                 self._setVerticalLabelAttributes(feat, math.degrees(baseVec.angle()))
 
                 labelvalue = self.grid[self.numCellsY + 1][cell].y()
                 if self.crs().geographicFlag():
                     showDegrees = True
-                    
+
                     if self.label_degrees_diff and cell > 0 and cell < len(self.grid[self.numCellsY + 1]) - 1:
                         if labelvalue < 0.0:
                             lastLabelValue = self.grid[self.numCellsY + 1][cell + 1].y()
                         else:
                             lastLabelValue = self.grid[self.numCellsY + 1][cell - 1].y()
-                        
+
                         if (abs(lastLabelValue) // 1 == abs(labelvalue) // 1) and ((lastLabelValue < 0.0) == (labelvalue < 0.0)):
                             showDegrees = False
-                    
+
                     labeltext = self.formatLabel(labelvalue, '%n', showDegrees)
                 else:
                     labeltext = '{0:0.{precision}f}'.format(labelvalue, precision=self.label_precision)
 
-                feat.addAttribute(2, labeltext)
+                feat['ordinate'] = labeltext
                 feat.setGeometry(core.QgsGeometry().fromPoint(self.grid[self.numCellsY + 1][cell]))
                 self.label_features.append(feat)
 
         elif self.label_type == 1:
             # Cell coordinates.
             for cell in xrange(0, len(self.grid[0]) - 1):
-                feat = core.QgsFeature()
-                feat.addAttribute(0, cell)
+                feat = core.QgsFeature(self.fields)
+                feat['cell_num'] = cell
                 self._setHorizontalLabelAttributes(feat, math.degrees(baseVec.angle()))
-                
+
                 # Labels representing CRS coordinates are placed in the centre of the cell.
                 p = core.QgsPoint(self.grid[0][cell].x() + halfBaseVec.x, self.grid[0][cell].y() + halfBaseVec.y)
                 feat.setGeometry(core.QgsGeometry().fromPoint(p))
-            
+
                 self.label_features.append(feat)
-            
+
             for cell in xrange(0, len(self.grid[self.numCellsY + 1]) - 1):
-                feat = core.QgsFeature()
-                feat.addAttribute(0, cell)
+                feat = core.QgsFeature(self.fields)
+                feat['cell_num'] = cell
                 self._setVerticalLabelAttributes(feat, math.degrees(baseVec.angle()))
-                
+
                 p = core.QgsPoint(self.grid[self.numCellsY + 1][cell].x() + halfPerpVec.x, self.grid[self.numCellsY + 1][cell].y() + halfPerpVec.y)
                 feat.setGeometry(core.QgsGeometry().fromPoint(p))
-                
+
                 self.label_features.append(feat)
 
         elif self.label_type == 2:
             # Grid reference - cell.
             for celly in xrange(0, len(self.grid[self.numCellsY + 1]) - 1):
                 for cellx in xrange(0, len(self.grid[0]) - 1):
-                    feat = core.QgsFeature()
-                    feat.addAttribute(0, (celly * len(self.grid[0])) + cellx)
+                    feat = core.QgsFeature(self.fields)
+                    feat['cell_num'] = (celly * len(self.grid[0])) + cellx
                     self._setHorizontalLabelAttributes(feat, math.degrees(baseVec.angle()))
 
                     labeltext = u'{0} {1}'.format(cellx, celly)
-                    feat.addAttribute(2, labeltext)
-                    
+                    feat['ordinate'] = labeltext
+
                     # Labels representing CRS coordinates are placed in the centre of the cell.
                     px = core.QgsPoint(self.grid[0][cellx].x() + halfBaseVec.x, self.grid[0][cellx].y() + halfBaseVec.y)
                     py = core.QgsPoint(self.grid[self.numCellsY + 1][celly].x() + halfPerpVec.x, self.grid[self.numCellsY + 1][celly].y() + halfPerpVec.y)
                     pp = core.QgsPoint(px.x() + py.x(), px.y() + py.y())
                     feat.setGeometry(core.QgsGeometry().fromPoint(pp))
-                
+
                     self.label_features.append(feat)
 
         # MGRS
@@ -262,66 +262,66 @@ class GridPluginLayer(core.QgsPluginLayer):
             # Grid reference - MGRS.
             # Cell coordinates.
             for cell in xrange(0, len(self.grid[0]) - 1):
-                feat = core.QgsFeature()
-                feat.addAttribute(0, cell)
+                feat = core.QgsFeature(self.fields)
+                feat['cell_num'] = cell
                 self._setHorizontalLabelAttributes(feat, math.degrees(baseVec.angle()))
-                
+
                 # Labels representing CRS coordinates are placed in the centre of the grid line.
                 p = core.QgsPoint(self.grid[0][cell].x(), self.grid[0][cell].y() + halfBaseVec.y)
                 feat.setGeometry(core.QgsGeometry().fromPoint(p))
-            
+
                 p0 = core.QgsPoint(self.grid[0][cell].x(), self.grid[0][cell].y())
                 mgrs = m.toMgrs(p0)
                 ( zone, letters, easting, nothing, precision )  = m.parseMGRS(mgrs)
                 labeltext = easting
-                feat.addAttribute(2, labeltext)
+                feat['ordinate'] = labeltext
                 self.label_features.append(feat)
-            
+
             for cell in xrange(0, len(self.grid[self.numCellsY + 1]) - 1):
-                feat = core.QgsFeature()
-                feat.addAttribute(0, cell)
+                feat = core.QgsFeature(self.fields)
+                feat['cell_num'] = cell
                 self._setVerticalLabelAttributes(feat, math.degrees(baseVec.angle()))
-                
+
                 p = core.QgsPoint(self.grid[self.numCellsY + 1][cell].x() + halfPerpVec.x, self.grid[self.numCellsY + 1][cell].y())
                 feat.setGeometry(core.QgsGeometry().fromPoint(p))
-                
-                feat.addAttribute(2, labeltext)
+
+                feat['ordinate'] = labeltext
                 self.label_features.append(feat)
 
     def _setHorizontalLabelAttributes(self, feature, angle):
         if self.label_orientation == 0 or self.label_orientation == 3:
-            feature.addAttribute(1, angle)
-            feature.addAttribute(3, 'top')
-            feature.addAttribute(4, self.label_xoff_horizontal)
-            feature.addAttribute(5, self.label_xoff_vertical)
+            feature['angle'] = angle
+            feature['alignment'] = 'top'
+            feature['offset_x'] = self.label_xoff_horizontal
+            feature['offset_y'] = self.label_xoff_vertical
         else:
-            feature.addAttribute(1, angle + 90.0)
-            feature.addAttribute(3, 'right')
-            feature.addAttribute(4, self.label_xoff_vertical)
-            feature.addAttribute(5, self.label_xoff_horizontal)
+            feature['angle'] = angle + 90.0
+            feature['alignment'] = 'right'
+            feature['offset_x'] = self.label_xoff_vertical
+            feature['offset_y'] = self.label_xoff_horizontal
 
     def _setVerticalLabelAttributes(self, feature, angle):
         if self.label_orientation == 0 or self.label_orientation == 2:
-            feature.addAttribute(1, angle)
-            feature.addAttribute(3, 'right')
-            feature.addAttribute(4, self.label_yoff_horizontal)
-            feature.addAttribute(5, self.label_yoff_vertical)
+            feature['angle'] = angle
+            feature['alignment'] = 'right'
+            feature['offset_x'] = self.label_yoff_horizontal
+            feature['offset_y'] = self.label_yoff_vertical
         else:
-            feature.addAttribute(1, angle + 90.0)
-            feature.addAttribute(3, 'bottom')
-            feature.addAttribute(4, self.label_yoff_vertical)
-            feature.addAttribute(5, self.label_yoff_horizontal)
+            feature['angle'] = angle + 90.0
+            feature['alignment'] = 'bottom'
+            feature['offset_x'] = self.label_yoff_vertical
+            feature['offset_y'] = self.label_yoff_horizontal
 
     def formatLabel(self, angleValue, hemisphere, showDegrees):
         angle = Angle(angleValue)
         labeltext = ''
-        
+
         if showDegrees:
             sign, hemisphere = ('', hemisphere) if self.label_hemisphere else ('%g', '')
         else:
             sign = ''
             hemisphere = ''
-            
+
         pad = '0' if self.label_leading_zeros else ''
 
         if self.label_format == 0:
@@ -331,7 +331,7 @@ class GridPluginLayer(core.QgsPluginLayer):
                 labeltext = u'{0:{sign}%{pad}D\u00b0{decimal} {hemisphere}}'.format(angle, decimal=decimal, sign=sign, hemisphere=hemisphere, pad=pad)
             else:
                 labeltext = u'{0:{sign}{decimal} {hemisphere}}'.format(angle, decimal=decimal, sign=sign, hemisphere=hemisphere)
-            
+
         elif self.label_format == 1:
             # Degrees, decimal minutes.
             decimal = '.%{0}m'.format(self.label_precision) if self.label_precision > 0 else ''
@@ -339,7 +339,7 @@ class GridPluginLayer(core.QgsPluginLayer):
                 labeltext = u'{0:{sign}%{pad}D\u00b0 %{pad}M\'{decimal} {hemisphere}}'.format(angle, decimal=decimal, sign=sign, hemisphere=hemisphere, pad=pad)
             else:
                 labeltext = u'{0:{sign}%{pad}M\'{decimal} {hemisphere}}'.format(angle, decimal=decimal, sign=sign, hemisphere=hemisphere, pad=pad)
-            
+
         elif self.label_format == 2:
             # Degrees, minutes, decimal seconds.
             decimal = '.%{0}s'.format(self.label_precision) if self.label_precision > 0 else ''
@@ -347,18 +347,23 @@ class GridPluginLayer(core.QgsPluginLayer):
                 labeltext = u'{0:{sign}%{pad}D\u00b0 %{pad}M\' %{pad}S"{decimal} {hemisphere}}'.format(angle, decimal=decimal, sign=sign, hemisphere=hemisphere, pad=pad)
             else:
                 labeltext = u'{0:{sign}%{pad}M\' %{pad}S"{decimal} {hemisphere}}'.format(angle, decimal=decimal, sign=sign, hemisphere=hemisphere, pad=pad)
-        
+
         return labeltext
 
     def setCrs(self, crs):
         core.QgsPluginLayer.setCrs(self, crs)
         self.generateGrid()
-        self.setCacheImage(None)
+
+        try:
+            self.setCacheImage(None)
+        except DeprecationWarning:
+            pass
+
         self.emit(QtCore.SIGNAL('repaintRequested()'))
 
     def readXml(self, node):
         element = node.toElement()
-        
+
         org_x = float(element.attribute('origin_x', '0.0'))
         org_y = float(element.attribute('origin_y', '0.0'))
         self.origin = core.QgsPoint(org_x, org_y)
@@ -369,7 +374,7 @@ class GridPluginLayer(core.QgsPluginLayer):
         self.cellSizeX = float(element.attribute('cell_size_x', '10.0'))
         self.cellSizeY = float(element.attribute('cell_size_y', '10.0'))
         self.baselineAngle = float(element.attribute('baseline_angle', '0.0'))
-        
+
         labelElement = node.firstChildElement('label')
         if labelElement is not None:
             self.draw_labels = bool(labelElement.attribute('draw_labels', '0'))
@@ -387,7 +392,7 @@ class GridPluginLayer(core.QgsPluginLayer):
             attributesElement = labelElement.firstChildElement('labelattributes')
             if attributesElement is not None:
                 self.label.readXML(attributesElement)
-        
+
         self.generateGrid()
         self.readSymbology(node, None)
 
@@ -422,9 +427,9 @@ class GridPluginLayer(core.QgsPluginLayer):
         labelElement.setAttribute('leading_zeros', str(self.label_leading_zeros))
         labelElement.setAttribute('degrees_diff', str(self.label_degrees_diff))
         self.label.writeXML(labelElement, doc)
-        
+
         node.appendChild(labelElement)
-        
+
         self.writeSymbology(node, doc, None)
 
         return True
@@ -434,7 +439,12 @@ class GridPluginLayer(core.QgsPluginLayer):
 
         if symbolElement is not None and symbolElement.attribute('name') == 'grid_lines':
             self.symbol = core.QgsSymbolLayerV2Utils.loadSymbol(symbolElement)
-            self.setCacheImage(None)
+
+            try:
+                self.setCacheImage(None)
+            except DeprecationWarning:
+                pass
+
             self.emit(QtCore.SIGNAL('repaintRequested()'))
             return True
         else:
@@ -454,7 +464,12 @@ class GridPluginLayer(core.QgsPluginLayer):
         if result == 1:
             self.generateGrid()
             self.setValid(True)
-            self.setCacheImage(None)
+
+            try:
+                self.setCacheImage(None)
+            except DeprecationWarning:
+                pass
+
             self.emit(QtCore.SIGNAL('repaintRequested()'))
         else:
             self.setValid(False)
