@@ -100,11 +100,7 @@ class GridPluginLayer(core.QgsPluginLayer):
             for vertex in line:
                 end = mapToPixel.transform(xform.transform(vertex))
                 polyline.append(QtCore.QPointF(end.x(), end.y()))
-
-                if QGis.QGIS_VERSION_INT < 10800:
-                    self.symbol.renderPolyline(polyline, renderContext)
-                else:
-                    self.symbol.renderPolyline(polyline, None, renderContext)
+                self.symbol.renderPolyline(polyline, None, renderContext)
 
         self.symbol.stopRender(renderContext)
         return True
