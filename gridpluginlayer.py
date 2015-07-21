@@ -165,6 +165,8 @@ class GridPluginLayer(core.QgsPluginLayer):
         if self.label_type == 0:
             for cell in xrange(0, len(self.grid[0])):
                 feat = core.QgsFeature(self.fields)
+                feat.initAttributes(core.QgsLabel.LabelFieldCount)
+
                 feat['cell_num'] = cell
                 self._setHorizontalLabelAttributes(feat, math.degrees(baseVec.angle()))
 
@@ -191,6 +193,7 @@ class GridPluginLayer(core.QgsPluginLayer):
 
             for cell in xrange(0, len(self.grid[self.numCellsY + 1])):
                 feat = core.QgsFeature(self.fields)
+                feat.initAttributes(core.QgsLabel.LabelFieldCount)
                 feat['cell_num'] = cell
                 self._setVerticalLabelAttributes(feat, math.degrees(baseVec.angle()))
 
@@ -219,23 +222,23 @@ class GridPluginLayer(core.QgsPluginLayer):
             # Cell coordinates.
             for cell in xrange(0, len(self.grid[0]) - 1):
                 feat = core.QgsFeature(self.fields)
+                feat.initAttributes(core.QgsLabel.LabelFieldCount)
                 feat['cell_num'] = cell
                 self._setHorizontalLabelAttributes(feat, math.degrees(baseVec.angle()))
 
                 # Labels representing CRS coordinates are placed in the centre of the cell.
                 p = core.QgsPoint(self.grid[0][cell].x() + halfBaseVec.x, self.grid[0][cell].y() + halfBaseVec.y)
                 feat.setGeometry(core.QgsGeometry().fromPoint(p))
-
                 self.label_features.append(feat)
 
             for cell in xrange(0, len(self.grid[self.numCellsY + 1]) - 1):
                 feat = core.QgsFeature(self.fields)
+                feat.initAttributes(core.QgsLabel.LabelFieldCount)
                 feat['cell_num'] = cell
                 self._setVerticalLabelAttributes(feat, math.degrees(baseVec.angle()))
 
                 p = core.QgsPoint(self.grid[self.numCellsY + 1][cell].x() + halfPerpVec.x, self.grid[self.numCellsY + 1][cell].y() + halfPerpVec.y)
                 feat.setGeometry(core.QgsGeometry().fromPoint(p))
-
                 self.label_features.append(feat)
 
         elif self.label_type == 2:
@@ -243,6 +246,7 @@ class GridPluginLayer(core.QgsPluginLayer):
             for celly in xrange(0, len(self.grid[self.numCellsY + 1]) - 1):
                 for cellx in xrange(0, len(self.grid[0]) - 1):
                     feat = core.QgsFeature(self.fields)
+                    feat.initAttributes(core.QgsLabel.LabelFieldCount)
                     feat['cell_num'] = (celly * len(self.grid[0])) + cellx
                     self._setHorizontalLabelAttributes(feat, math.degrees(baseVec.angle()))
 
@@ -254,7 +258,6 @@ class GridPluginLayer(core.QgsPluginLayer):
                     py = core.QgsPoint(self.grid[self.numCellsY + 1][celly].x() + halfPerpVec.x, self.grid[self.numCellsY + 1][celly].y() + halfPerpVec.y)
                     pp = core.QgsPoint(px.x() + py.x(), px.y() + py.y())
                     feat.setGeometry(core.QgsGeometry().fromPoint(pp))
-
                     self.label_features.append(feat)
 
         # MGRS
@@ -263,6 +266,7 @@ class GridPluginLayer(core.QgsPluginLayer):
             # Cell coordinates.
             for cell in xrange(0, len(self.grid[0]) - 1):
                 feat = core.QgsFeature(self.fields)
+                feat.initAttributes(core.QgsLabel.LabelFieldCount)
                 feat['cell_num'] = cell
                 self._setHorizontalLabelAttributes(feat, math.degrees(baseVec.angle()))
 
@@ -279,13 +283,13 @@ class GridPluginLayer(core.QgsPluginLayer):
 
             for cell in xrange(0, len(self.grid[self.numCellsY + 1]) - 1):
                 feat = core.QgsFeature(self.fields)
+                feat.initAttributes(core.QgsLabel.LabelFieldCount)
                 feat['cell_num'] = cell
                 self._setVerticalLabelAttributes(feat, math.degrees(baseVec.angle()))
+                feat['ordinate'] = labeltext
 
                 p = core.QgsPoint(self.grid[self.numCellsY + 1][cell].x() + halfPerpVec.x, self.grid[self.numCellsY + 1][cell].y())
                 feat.setGeometry(core.QgsGeometry().fromPoint(p))
-
-                feat['ordinate'] = labeltext
                 self.label_features.append(feat)
 
     def _setHorizontalLabelAttributes(self, feature, angle):
