@@ -354,12 +354,7 @@ class GridPluginLayer(core.QgsPluginLayer):
         core.QgsPluginLayer.setCrs(self, crs)
         self.generateGrid()
 
-        try:
-            self.setCacheImage(None)
-        except DeprecationWarning:
-            pass
-
-        self.emit(QtCore.SIGNAL('repaintRequested()'))
+        self.emit(QtCore.SIGNAL("changed()"))
 
     def readXml(self, node):
         element = node.toElement()
@@ -440,12 +435,7 @@ class GridPluginLayer(core.QgsPluginLayer):
         if symbolElement is not None and symbolElement.attribute('name') == 'grid_lines':
             self.symbol = core.QgsSymbolLayerV2Utils.loadSymbol(symbolElement)
 
-            try:
-                self.setCacheImage(None)
-            except DeprecationWarning:
-                pass
-
-            self.emit(QtCore.SIGNAL('repaintRequested()'))
+            self.emit(QtCore.SIGNAL("changed()"))
             return True
         else:
             return False
@@ -465,11 +455,6 @@ class GridPluginLayer(core.QgsPluginLayer):
             self.generateGrid()
             self.setValid(True)
 
-            try:
-                self.setCacheImage(None)
-            except DeprecationWarning:
-                pass
-
-            self.emit(QtCore.SIGNAL('repaintRequested()'))
+            self.emit(QtCore.SIGNAL("changed()"))
         else:
             self.setValid(False)
