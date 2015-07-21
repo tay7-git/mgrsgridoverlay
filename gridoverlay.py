@@ -19,12 +19,17 @@
  ***************************************************************************/
 """
 
+from PyQt4 import QtCore
 from PyQt4 import QtGui
 from qgis import core
+
+# Initialize Qt resources from file resources.py
+import resources_rc
 
 from gridpropertiesdialog import GridPropertiesDialog
 from gridpluginlayertype import GridPluginLayerType
 from gridpluginlayer import GridPluginLayer
+import os.path
 
 class GridOverlay:
     '''
@@ -35,14 +40,25 @@ class GridOverlay:
         # Save reference to the QGIS interface
         self.iface = iface
         self.action_newGrid = None
+        self.plugin_folder = os.path.abspath(os.path.dirname(__file__))
+
+        # initialize locale
+        locale = QtCore.QSettings().value("locale/userLocale")[0:2]
+        localePath = os.path.join(self.plugin_folder, 'i18n', 'gridoverlay_{}.qm'.format(locale))
+
+        if os.path.exists(localePath):
+            self.translator = QTranslator()
+            self.translator.load(localePath)
+
+            if qVersion() > '4.3.3':
+                QCoreApplication.installTranslator(self.translator)
 
     def initGui(self):
         '''
         Sets this up as a QGIS plug-in.
         '''
         # Create action_newGrid that will start plugin configuration
-        self.action_newGrid = QtGui.QAction(
-                        QtGui.QIcon(":/icons/icon.png"),
+        self.action_newGrid = QtGui.QAction(QtGui.QIcon(self.plugin_folder + "/icon.png"),
                         "Add Grid Overlay...", self.iface.mainWindow())
 
         # Add toolbar button and menu item
