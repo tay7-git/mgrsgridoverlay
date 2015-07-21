@@ -38,7 +38,7 @@ class GridPluginLayer(core.QgsPluginLayer):
                                      'Grid overlay')
         self.setValid(True)
 
-        props = {'width':'0', 'color':'0,255,0'}
+        props = {'width':'0.1', 'color':'0,255,0'}
         self.symbol = core.QgsLineSymbolV2.createSimple(props)
 
         self.origin = core.QgsPoint(0.0, 0.0)
