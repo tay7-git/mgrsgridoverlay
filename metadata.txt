@@ -1,9 +1,9 @@
 [general]
-name=Grid Overlay with MRGS
+name=Grid Overlay with MGRS
 qgisMinimumVersion=2.0
-description=Overlays a user-definable grid on the map, add MRGS supports.
+description=Overlays a user-definable grid on the map, add MGRS supports.
 category=Layers
-version=version 0.1.1-mrgs
+version=version 0.1.1-mgrs
 
 icon=icon.png
 experimental=True
