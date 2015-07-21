@@ -30,16 +30,7 @@ version_major = 0
 version_minor = 1
 version_revision = 1
 
-def name():
-    return "Grid Overlay with MRGS"
-def description():
-    return "Overlays a user-definable grid on the map, supports MRGS."
-def version():
-    return "Version %d.%d.%d" % (version_major, version_minor, version_revision)
-def icon():
-    return "icon.png"
-def category():
-    return "Layers"
+
 def classFactory(iface):
     from gridoverlay import GridOverlay
     return GridOverlay(iface)
